@@ -14,6 +14,24 @@ app.use(express.static('public'));
 // セッションごとのチャット履歴を保持
 const chatSessions = {};
 
+// リトライ用のヘルパー関数（エラー時に待機して再試行する）
+async function retryOperation(fn, retries = 3, delay = 2000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            // 503エラー（UNAVAILABLE）かつ、まだ試行回数が残っている場合
+            if (error.status === 503 && i < retries - 1) {
+                console.log(`APIが混雑しています（503）。${delay / 1000}秒後に再試行します... (${i + 1}/${retries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // 待機時間を少しずつ長くする（指数バックオフ）
+            } else {
+                throw error;
+            }
+        }
+    }
+}
+
 app.post('/api/chat', upload.single('media'), async (req, res) => {
     try {
         const { message, sessionId = 'default' } = req.body;
@@ -21,7 +39,7 @@ app.post('/api/chat', upload.single('media'), async (req, res) => {
 
         if (!chatSessions[sessionId]) {
             chatSessions[sessionId] = ai.chats.create({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3.6-flash',
                 config: {
                     systemInstruction: "あなたは音楽学習プラットフォーム「otomo」の優秀なAIアシスタントです。音楽理論、楽譜の読み方、楽器の練習方法などを分かりやすく教えてください。"
                 }
@@ -31,34 +49,33 @@ app.post('/api/chat', upload.single('media'), async (req, res) => {
         const chat = chatSessions[sessionId];
         let response;
 
-        // 画像や動画ファイルが添付されている場合
-        if (file) {
-            const fileBuffer = fs.readFileSync(file.path);
-            const base64Data = fileBuffer.toString('base64');
+        // リトライ関数を使ってメッセージを送信する
+        await retryOperation(async () => {
+            if (file) {
+                const fileBuffer = fs.readFileSync(file.path);
+                const base64Data = fileBuffer.toString('base64');
 
-            response = await chat.sendMessage({
-                message: [
-                    message || "このファイルについて解説してください。",
-                    {
-                        inlineData: {
-                            data: base64Data,
-                            mimeType: file.mimetype
+                response = await chat.sendMessage({
+                    message: [
+                        message || "このファイルについて解説してください。",
+                        {
+                            inlineData: {
+                                data: base64Data,
+                                mimeType: file.mimetype
+                            }
                         }
-                    }
-                ]
-            });
-
-            // 一時ファイルを削除
-            fs.unlinkSync(file.path);
-        } else {
-            // テキストのみの場合
-            response = await chat.sendMessage({ message });
-        }
+                    ]
+                });
+                fs.unlinkSync(file.path); // 一時ファイルを削除
+            } else {
+                response = await chat.sendMessage({ message });
+            }
+        });
 
         res.json({ reply: response.text });
     } catch (error) {
         console.error("API Error:", error);
-        res.status(500).json({ error: "AIの応答取得に失敗しました。" });
+        res.status(500).json({ error: "AIの応答取得に失敗しました。しばらく待ってから再度お試しください。" });
     }
 });
 
