@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>otomo - AI音楽学習 & 楽譜プラットフォーム</title>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 0.875rem;
+            color: var(--text-sub);
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        /* チャットエリア */
+        .chat-section {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        #chat-box {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 0.875rem 1rem;
+            border-radius: 12px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            word-break: break-word;
+        }
+
+        .message.user {
+            background-color: var(--primary-color);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.assistant {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .input-form {
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            gap: 0.5rem;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        #user-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            cursor: pointer;
+            padding: 0.3rem 0.5rem;
+            border: 1px dashed var(--border-color);
+            border-radius: 6px;
+            width: fit-content;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* サイドパネル（楽譜メモ ＆ メトロノーム） */
+        .side-panel {
+            width: 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 0.95rem;
+            background-color: #f8fafc;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* メトロノーム専用スタイル */
+        .metronome-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .metronome-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        input[type="range"] {
+            flex: 1;
+        }
+
+        /* 楽譜・コードメモ用スタイル */
+        .score-content textarea {
+            width: 100%;
+            height: 120px;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            resize: none;
+            outline: none;
+        }
+
+        .score-preview {
+            background: #f8fafc;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .side-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>otomo</h1>
+            <p>AI Music Learning & Sheet Music Platform</p>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- チャットセクション -->
+        <div class="chat-section">
+            <div id="chat-box">
+                <div class="message assistant">こんにちは！otomoへようこそ。音楽の質問だけでなく、**楽譜の画像や演奏動画**をアップロードしてAIに分析してもらうこともできますよ！</div>
+            </div>
+            <form class="input-form" id="chat-form">
+                <div class="input-row">
+                    <input type="text" id="user-input" placeholder="AIにメッセージを送る（画像や動画も送れます）..." autocomplete="off">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label class="file-input-label">
+                        📁 画像・動画を添付
+                        <input type="file" id="media-file" accept="image/*,video/*" style="display: none;">
+                    </label>
+                    <span id="file-name" style="font-size: 0.8rem; color: var(--text-sub);">選択されていません</span>
+                    <button type="submit">送信</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- サイドパネル：メトロノーム ＆ 楽譜メモ -->
+        <div class="side-panel">
+            <!-- メトロノーム機能 -->
+            <div class="card">
+                <div class="card-header">⏱️ メトロノーム</div>
+                <div class="card-body">
+                    <div class="metronome-display" id="tempo-display">120 BPM</div>
+                    <div class="metronome-controls">
+                        <span>60</span>
+                        <input type="range" id="tempo-slider" min="40" max="200" value="120">
+                        <span>200</span>
+                    </div>
+                    <button type="button" id="metronome-btn">スタート</button>
+                </div>
+            </div>
+
+            <!-- 楽譜・コードメモ -->
+            <div class="card">
+                <div class="card-header">🎼 楽譜・コード進行メモ</div>
+                <div class="card-body score-content">
+                    <textarea id="score-pad" placeholder="コード進行などをメモ">Key: C
+Progression: C - Am - F - G</textarea>
+                    <div class="score-preview" id="score-preview">C | Am | F | G</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- メトロノーム機能のロジック ---
+        let audioCtx = null;
+        let isPlaying = false;
+        let timerId = null;
+        let bpm = 120;
+
+        const tempoSlider = document.getElementById('tempo-slider');
+        const tempoDisplay = document.getElementById('tempo-display');
+        const metronomeBtn = document.getElementById('metronome-btn');
+
+        tempoSlider.addEventListener('input', (e) => {
+            bpm = e.target.value;
+            tempoDisplay.textContent = `${bpm} BPM`;
+            if (isPlaying) {
+                stopMetronome();
+                startMetronome();
+            }
+        });
+
+        metronomeBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                stopMetronome();
+                metronomeBtn.textContent = "スタート";
+            } else {
+                startMetronome();
+                metronomeBtn.textContent = "ストップ";
+            }
+        });
+
+        function playClick() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const envelope = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime); // 高めのクリック音
+            
+            envelope.gain.setValueAtTime(1, audioCtx.currentTime);
+            envelope.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+
+            osc.connect(envelope);
+            envelope.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function startMetronome() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const interval = (60 / bpm) * 1000;
+            playClick();
+            timerId = setInterval(playClick, interval);
+            isPlaying = true;
+        }
+
+        function stopMetronome() {
+            clearInterval(timerId);
+            isPlaying = false;
+        }
+
+        // --- 楽譜メモの連動 ---
+        const scorePad = document.getElementById('score-pad');
+        const scorePreview = document.getElementById('score-preview');
+        scorePad.addEventListener('input', () => {
+            scorePreview.textContent = scorePad.value;
+        });
+
+        // --- チャット ＆ マルチモーダル送信処理 ---
+        const chatBox = document.getElementById('chat-box');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const mediaFile = document.getElementById('media-file');
+        const fileNameDisplay = document.getElementById('file-name');
+
+        mediaFile.addEventListener('change', () => {
+            if (mediaFile.files.length > 0) {
+                fileNameDisplay.textContent = mediaFile.files[0].name;
+            } else {
+                fileNameDisplay.textContent = "選択されていません";
+            }
+        });
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            const file = mediaFile.files[0];
+
+            if (!message && !file) return;
+
+            let displayText = message;
+            if (file) displayText += ` [添付ファイル: ${file.name}]`;
+
+            appendMessage(displayText, 'user');
+            userInput.value = '';
+
+            const loadingId = appendMessage('AIが分析・思考中です...', 'assistant');
+
+            const formData = new FormData();
+            formData.append('message', message);
+            if (file) {
+                formData.append('media', file);
+            }
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                removeMessage(loadingId);
+
+                if (data.reply) {
+                    appendMessage(data.reply, 'assistant');
+                } else {
+                    appendMessage('エラーが発生しました。', 'assistant');
+                }
+            } catch (error) {
+                removeMessage(loadingId);
+                appendMessage('通信エラーが発生しました。', 'assistant');
+            } finally {
+                // ファイル選択をリセット
+                mediaFile.value = '';
+                fileNameDisplay.textContent = "選択されていません";
+            }
+        });
+
+        function appendMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            const id = 'msg-' + Date.now() + Math.random();
+            messageDiv.id = id;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return id;
+        }
+
+        function removeMessage(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+    </script>
+</body>
+</html>
