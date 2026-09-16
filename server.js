@@ -39,7 +39,7 @@ app.post('/api/chat', upload.single('media'), async (req, res) => {
 
         if (!chatSessions[sessionId]) {
             chatSessions[sessionId] = ai.chats.create({
-                model: 'gemini-3.8-flash',
+                model: 'gemini-2.5-flash',
                 config: {
                     systemInstruction: "あなたは音楽学習プラットフォーム「otomo」の優秀なAIアシスタントです。音楽理論、楽譜の読み方、楽器の練習方法などを分かりやすく教えてください。"
                 }
