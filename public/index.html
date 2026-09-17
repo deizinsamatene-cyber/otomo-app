@@ -1,3 +1,4 @@
+==> Running 'node server.js'
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -28,6 +29,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            overflow: hidden;
         }
 
         header {
@@ -128,10 +130,6 @@
             outline: none;
         }
 
-        #user-input:focus {
-            border-color: var(--primary-color);
-        }
-
         .file-input-label {
             display: flex;
             align-items: center;
@@ -161,22 +159,14 @@
             background-color: var(--primary-hover);
         }
 
-        button.secondary {
-            background-color: #64748b;
-        }
-        button.secondary:hover {
-            background-color: #475569;
-        }
-        button.danger {
-            background-color: #ef4444;
-        }
-        button.danger:hover {
-            background-color: #dc2626;
-        }
+        button.secondary { background-color: #64748b; }
+        button.secondary:hover { background-color: #475569; }
+        button.danger { background-color: #ef4444; }
+        button.danger:hover { background-color: #dc2626; }
 
-        /* サイドパネル */
+        /* サイドパネル（メトロノーム＆楽器選択トリガー） */
         .side-panel {
-            width: 420px;
+            width: 380px;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -199,9 +189,6 @@
             font-weight: 600;
             font-size: 0.95rem;
             background-color: #f8fafc;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
         .card-body {
@@ -211,7 +198,6 @@
             gap: 1rem;
         }
 
-        /* メトロノーム専用スタイル */
         .metronome-display {
             text-align: center;
             font-size: 1.75rem;
@@ -226,94 +212,174 @@
             gap: 1rem;
         }
 
-        input[type="range"] {
-            flex: 1;
-        }
+        input[type="range"] { flex: 1; }
 
-        /* 楽譜作成エディタ */
-        .instrument-selector {
+        /* 楽器選択ボタン群 */
+        .instrument-launchers {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
 
-        .tab-btn {
+        .launch-btn {
             flex: 1;
-            background: #e2e8f0;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            background: #f1f5f9;
             color: var(--text-main);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .tab-btn.active {
+        .launch-btn:hover {
+            border-color: var(--primary-color);
+            background: #e0e7ff;
+            color: var(--primary-color);
+        }
+
+        /* --- 拡大モーダル画面（画面いっぱいに表示） --- */
+        #instrument-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 1100px;
+            height: 85vh;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 1.25rem 2rem;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        .modal-body {
+            padding: 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        /* 大きな楽譜プレビューエリア */
+        .big-score-preview {
+            background: #f8fafc;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: monospace;
+            font-size: 1.1rem;
+            min-height: 140px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 88鍵盤ピアノの大きなグリッド */
+        .piano-big-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+
+        .piano-big-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 6px;
+        }
+
+        .piano-big-key {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 1rem 0.5rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: background 0.1s;
+        }
+        .piano-big-key:hover {
             background: var(--primary-color);
             color: white;
         }
 
-        .score-canvas-container {
-            background: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 0.75rem;
-            min-height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: monospace;
-            overflow-x: auto;
-        }
-
-        .piano-keys-container {
+        /* ギター用大きなコントロール */
+        .guitar-big-container {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
-            max-height: 150px;
-            overflow-y: auto;
+            gap: 1.5rem;
+            background: #f1f5f9;
+            padding: 2rem;
+            border-radius: 12px;
             border: 1px solid var(--border-color);
-            padding: 0.5rem;
+        }
+
+        .guitar-input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .guitar-input-group select, .guitar-input-group input {
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 2rem;
             background: #f8fafc;
-        }
-
-        .piano-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 2px;
-        }
-
-        .piano-key {
-            background: white;
-            border: 1px solid #cbd5e1;
-            padding: 0.4rem 0.2rem;
-            font-size: 0.7rem;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .piano-key:hover {
-            background: #e0e7ff;
-        }
-
-        .guitar-input-row {
+            border-top: 1px solid var(--border-color);
             display: flex;
-            gap: 0.5rem;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .guitar-input-row select, .guitar-input-row input {
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 0.85rem;
-        }
-
-        .editor-actions {
+        .action-buttons {
             display: flex;
-            gap: 0.5rem;
-        }
-
-        @media (max-width: 900px) {
-            .main-container {
-                flex-direction: column;
-            }
-            .side-panel {
-                width: 100%;
-            }
+            gap: 0.75rem;
         }
     </style>
 </head>
@@ -347,7 +413,7 @@
             </form>
         </div>
 
-        <!-- サイドパネル：メトロノーム ＆ 楽譜メーカー -->
+        <!-- サイドパネル -->
         <div class="side-panel">
             <!-- メトロノーム機能 -->
             <div class="card">
@@ -363,52 +429,71 @@
                 </div>
             </div>
 
-            <!-- 楽譜・コードメモメーカー -->
+            <!-- 楽譜メーカー起動カード -->
             <div class="card">
-                <div class="card-header">
-                    <span>🎼 楽譜メーカー</span>
-                    <div class="instrument-selector">
-                        <button type="button" class="tab-btn active" id="btn-piano" onclick="switchInstrument('piano')">ピアノ</button>
-                        <button type="button" class="tab-btn" id="btn-guitar" onclick="switchInstrument('guitar')">ギター</button>
-                    </div>
-                </div>
+                <div class="card-header">🎼 楽譜メーカー</div>
                 <div class="card-body">
-                    <!-- 楽譜プレビュー（五線譜 / TAB譜） -->
-                    <div class="score-canvas-container" id="score-preview">
-                        [ピアノ五線譜ビュー] 音符が追加されます
-                    </div>
-
-                    <!-- ピアノ用コントロール（88鍵盤選択の一部および簡易入力） -->
-                    <div id="piano-controls">
-                        <div style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 0.3rem;">鍵盤を選択して音符を追加 (全88音階):</div>
-                        <div class="piano-keys-container" id="piano-keys-grid">
-                            <!-- JSで88鍵盤生成 -->
-                        </div>
-                    </div>
-
-                    <!-- ギター用コントロール（タブ譜入力） -->
-                    <div id="guitar-controls" style="display: none;">
-                        <div class="guitar-input-row">
-                            <select id="guitar-string">
-                                <option value="1">1弦 (E)</option>
-                                <option value="2">2弦 (B)</option>
-                                <option value="3">3弦 (G)</option>
-                                <option value="4">4弦 (D)</option>
-                                <option value="5">5弦 (A)</option>
-                                <option value="6">6弦 (E)</option>
-                            </select>
-                            <input type="text" id="guitar-fret" placeholder="フレット (例: 3, f, b)" style="flex:1;">
-                            <button type="button" onclick="addGuitarNote()">追加</button>
-                        </div>
-                    </div>
-
-                    <!-- 編集・保存アクションボタン -->
-                    <div class="editor-actions">
-                        <button type="button" class="secondary" onclick="undoNote()">1音消す</button>
-                        <button type="button" class="danger" onclick="clearScore()">すべて消す</button>
-                        <button type="button" onclick="saveScoreFile()">ファイル保存</button>
+                    <p style="font-size: 0.85rem; color: var(--text-sub);">楽器を選択すると、画面いっぱいに専用エディタが開きます：</p>
+                    <div class="instrument-launchers">
+                        <button type="button" class="launch-btn" onclick="openInstrumentModal('piano')">
+                            <span>🎹</span> ピアノ (88鍵)
+                        </button>
+                        <button type="button" class="launch-btn" onclick="openInstrumentModal('guitar')">
+                            <span>🎸</span> ギター (TAB譜)
+                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 楽器専用 拡大画面モーダル -->
+    <div id="instrument-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">🎹 ピアノ 楽譜エディタ</h2>
+                <button type="button" class="secondary" onclick="closeInstrumentModal()">閉じる</button>
+            </div>
+            <div class="modal-body">
+                <!-- 楽譜プレビュー -->
+                <div>
+                    <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-sub);">リアルタイム楽譜ビュー:</div>
+                    <div class="big-score-preview" id="modal-score-preview">
+                        [音符が追加されていきます]
+                    </div>
+                </div>
+
+                <!-- ピアノ88鍵盤ビュー -->
+                <div id="modal-piano-section" class="piano-big-container">
+                    <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">88鍵盤から音を選択して追加:</div>
+                    <div class="piano-big-grid" id="modal-piano-keys-grid">
+                        <!-- JSで全鍵盤生成 -->
+                    </div>
+                </div>
+
+                <!-- ギターTAB入力ビュー -->
+                <div id="modal-guitar-section" class="guitar-big-container" style="display: none;">
+                    <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">ギターTAB譜の入力 (フレット・文字を入力):</div>
+                    <div class="guitar-input-group">
+                        <select id="modal-guitar-string" style="flex: 1;">
+                            <option value="1">1弦 (E)</option>
+                            <option value="2">2弦 (B)</option>
+                            <option value="3">3弦 (G)</option>
+                            <option value="4">4弦 (D)</option>
+                            <option value="5">5弦 (A)</option>
+                            <option value="6">6弦 (E)</option>
+                        </select>
+                        <input type="text" id="modal-guitar-fret" placeholder="フレット番号や文字 (例: 3, f, b)" style="flex: 2;">
+                        <button type="button" onclick="addModalGuitarNote()" style="padding: 0.8rem 2rem;">追加</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="action-buttons">
+                    <button type="button" class="secondary" onclick="undoModalNote()">1音消す</button>
+                    <button type="button" class="danger" onclick="clearModalScore()">すべて消す</button>
+                </div>
+                <button type="button" onclick="saveModalScoreFile()">ファイル保存</button>
             </div>
         </div>
     </div>
@@ -427,36 +512,24 @@
         tempoSlider.addEventListener('input', (e) => {
             bpm = e.target.value;
             tempoDisplay.textContent = `${bpm} BPM`;
-            if (isPlaying) {
-                stopMetronome();
-                startMetronome();
-            }
+            if (isPlaying) { stopMetronome(); startMetronome(); }
         });
 
         metronomeBtn.addEventListener('click', () => {
-            if (isPlaying) {
-                stopMetronome();
-                metronomeBtn.textContent = "スタート";
-            } else {
-                startMetronome();
-                metronomeBtn.textContent = "ストップ";
-            }
+            if (isPlaying) { stopMetronome(); metronomeBtn.textContent = "スタート"; }
+            else { startMetronome(); metronomeBtn.textContent = "ストップ"; }
         });
 
         function playClick() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = audioCtx.createOscillator();
             const envelope = audioCtx.createGain();
-            
             osc.type = 'sine';
             osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            
             envelope.gain.setValueAtTime(1, audioCtx.currentTime);
             envelope.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-
             osc.connect(envelope);
             envelope.connect(audioCtx.destination);
-
             osc.start();
             osc.stop(audioCtx.currentTime + 0.05);
         }
@@ -469,91 +542,84 @@
             isPlaying = true;
         }
 
-        function stopMetronome() {
-            clearInterval(timerId);
-            isPlaying = false;
-        }
+        function stopMetronome() { clearInterval(timerId); isPlaying = false; }
 
-        // --- 楽譜メーカー機能 (ピアノ88鍵盤 & ギターTAB譜) ---
-        let currentInstrument = 'piano';
-        let scoreNotes = []; // 記録用配列
+        // --- 拡大モーダル楽譜エディタ ---
+        let activeInstrument = 'piano';
+        let scoreNotes = [];
 
-        function switchInstrument(inst) {
-            currentInstrument = inst;
-            document.getElementById('btn-piano').classList.toggle('active', inst === 'piano');
-            document.getElementById('btn-guitar').classList.toggle('active', inst === 'guitar');
+        function openInstrumentModal(inst) {
+            activeInstrument = inst;
+            document.getElementById('instrument-modal').style.display = 'flex';
+            document.getElementById('modal-title').textContent = inst === 'piano' ? '🎹 ピアノ 楽譜エディタ (88鍵盤)' : '🎸 ギター 楽譜エディタ (TAB譜)';
             
-            document.getElementById('piano-controls').style.display = inst === 'piano' ? 'block' : 'none';
-            document.getElementById('guitar-controls').style.display = inst === 'guitar' ? 'block' : 'none';
-            renderScorePreview();
+            document.getElementById('modal-piano-section').style.display = inst === 'piano' ? 'flex' : 'none';
+            document.getElementById('modal-guitar-section').style.display = inst === 'guitar' ? 'flex' : 'none';
+            renderModalScorePreview();
         }
 
-        // 88音階の生成 (A0 から C8 まで)
+        function closeInstrumentModal() {
+            document.getElementById('instrument-modal').style.display = 'none';
+        }
+
+        // 88鍵盤生成
         const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-        const pianoKeysGrid = document.getElementById('piano-keys-grid');
-        
-        // ピアノの88鍵盤（A0 = MIDI 21 から C8 = MIDI 108）を生成
+        const modalPianoKeysGrid = document.getElementById('modal-piano-keys-grid');
         for (let midi = 21; midi <= 108; midi++) {
             const noteNameIndex = (midi - 12) % 12;
             const octave = Math.floor((midi - 12) / 12);
             const name = noteNames[noteNameIndex] + octave;
 
             const keyEl = document.createElement('div');
-            keyEl.className = 'piano-key';
+            keyEl.className = 'piano-big-key';
             keyEl.textContent = name;
-            keyEl.onclick = () => addPianoNote(name);
-            pianoKeysGrid.appendChild(keyEl);
+            keyEl.onclick = () => {
+                scoreNotes.push({ type: 'piano', note: name });
+                renderModalScorePreview();
+            };
+            modalPianoKeysGrid.appendChild(keyEl);
         }
 
-        function addPianoNote(note) {
-            scoreNotes.push({ type: 'piano', note: note });
-            renderScorePreview();
-        }
-
-        function addGuitarNote() {
-            const stringNum = document.getElementById('guitar-string').value;
-            const fretVal = document.getElementById('guitar-fret').value.trim();
+        function addModalGuitarNote() {
+            const stringNum = document.getElementById('modal-guitar-string').value;
+            const fretVal = document.getElementById('modal-guitar-fret').value.trim();
             if (!fretVal) return;
 
             scoreNotes.push({ type: 'guitar', string: stringNum, fret: fretVal });
-            document.getElementById('guitar-fret').value = '';
-            renderScorePreview();
+            document.getElementById('modal-guitar-fret').value = '';
+            renderModalScorePreview();
         }
 
-        function undoNote() {
+        function undoModalNote() {
             scoreNotes.pop();
-            renderScorePreview();
+            renderModalScorePreview();
         }
 
-        function clearScore() {
+        function clearModalScore() {
             scoreNotes = [];
-            renderScorePreview();
+            renderModalScorePreview();
         }
 
-        function renderScorePreview() {
-            const previewEl = document.getElementById('score-preview');
+        function renderModalScorePreview() {
+            const previewEl = document.getElementById('modal-score-preview');
             if (scoreNotes.length === 0) {
-                previewEl.textContent = currentInstrument === 'piano' ? "[ピアノ五線譜] 音符が追加されます" : "[ギターTAB譜] 音符が追加されます";
+                previewEl.textContent = activeInstrument === 'piano' ? "[五線譜ビュー] 鍵盤をクリックすると音符が追加されます" : "[TAB譜ビュー] フレット文字を入力して追加してください";
                 return;
             }
 
-            if (currentInstrument === 'piano') {
-                // 五本線風のテキスト表現
+            if (activeInstrument === 'piano') {
                 const notesStr = scoreNotes.map(n => n.note).join(" - ");
                 previewEl.innerHTML = `
-                    E5 |---------------------<br>
+                    E5 |------------------------------------------<br>
                     C5 |-------- ${notesStr} <br>
-                    A4 |---------------------<br>
-                    F4 |---------------------<br>
-                    D4 |---------------------
+                    A4 |------------------------------------------<br>
+                    F4 |------------------------------------------<br>
+                    D4 |------------------------------------------
                 `;
             } else {
-                // ギターTAB譜風の表現 (6本線)
                 let lines = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
                 scoreNotes.forEach(n => {
-                    if (n.type === 'guitar') {
-                        lines[n.string].push(n.fret);
-                    }
+                    if (n.type === 'guitar') { lines[n.string].push(n.fret); }
                 });
 
                 previewEl.innerHTML = `
@@ -567,16 +633,15 @@
             }
         }
 
-        function saveScoreFile() {
+        function saveModalScoreFile() {
             if (scoreNotes.length === 0) {
                 alert("保存する楽譜データがありません！");
                 return;
             }
-
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scoreNotes, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `otomo_score_${currentInstrument}_${Date.now()}.json`);
+            downloadAnchor.setAttribute("download", `otomo_score_${activeInstrument}_${Date.now()}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -590,18 +655,13 @@
         const fileNameDisplay = document.getElementById('file-name');
 
         mediaFile.addEventListener('change', () => {
-            if (mediaFile.files.length > 0) {
-                fileNameDisplay.textContent = mediaFile.files[0].name;
-            } else {
-                fileNameDisplay.textContent = "選択されていません";
-            }
+            fileNameDisplay.textContent = mediaFile.files.length > 0 ? mediaFile.files[0].name : "選択されていません";
         });
 
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const message = userInput.value.trim();
             const file = mediaFile.files[0];
-
             if (!message && !file) return;
 
             let displayText = message;
@@ -611,27 +671,16 @@
             userInput.value = '';
 
             const loadingId = appendMessage('AIが分析・思考中です...', 'assistant');
-
             const formData = new FormData();
             formData.append('message', message);
-            if (file) {
-                formData.append('media', file);
-            }
+            if (file) formData.append('media', file);
 
             try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    body: formData
-                });
-
+                const response = await fetch('/api/chat', { method: 'POST', body: formData });
                 const data = await response.json();
                 removeMessage(loadingId);
-
-                if (data.reply) {
-                    appendMessage(data.reply, 'assistant');
-                } else {
-                    appendMessage('エラーが発生しました。', 'assistant');
-                }
+                if (data.reply) { appendMessage(data.reply, 'assistant'); }
+                else { appendMessage('エラーが発生しました。', 'assistant'); }
             } catch (error) {
                 removeMessage(loadingId);
                 appendMessage('通信エラーが発生しました。', 'assistant');
