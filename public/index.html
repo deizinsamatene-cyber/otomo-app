@@ -353,11 +353,12 @@
             align-items: center;
         }
 
-        .guitar-input-group select, .guitar-input-group input {
+        .guitar-input-group input {
             padding: 0.8rem 1rem;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             font-size: 1rem;
+            flex: 1;
         }
 
         .modal-footer {
@@ -424,7 +425,7 @@
                     <p style="font-size: 0.85rem; color: var(--text-sub);">楽器を選択すると、画面いっぱいに専用エディタが開きます：</p>
                     <div class="instrument-launchers">
                         <button type="button" class="launch-btn" id="btn-open-piano">
-                            <span>🎹</span> ピアノ (88鍵)
+                            <span>🎹</span> ピアノ (5線譜)
                         </button>
                         <button type="button" class="launch-btn" id="btn-open-guitar">
                             <span>🎸</span> ギター (TAB譜)
@@ -443,36 +444,28 @@
             </div>
             <div class="modal-body">
                 <div>
-                    <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-sub);">リアルタイム楽譜ビュー:</div>
+                    <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-sub);">リアルタイム五線譜ビュー:</div>
                     <div class="big-score-preview" id="modal-score-preview">
-                        [音符が追加されていきます]
+                        [五線譜に音符が追加されます]
                     </div>
                 </div>
 
                 <div id="modal-piano-section" class="piano-big-container">
-                    <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">88鍵盤から音を選択して追加:</div>
+                    <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">鍵盤（ドレミ）をクリックして音符を追加:</div>
                     <div class="piano-big-grid" id="modal-piano-keys-grid"></div>
                 </div>
 
                 <div id="modal-guitar-section" class="guitar-big-container" style="display: none;">
-                    <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">ギターTAB譜の入力 (フレット・文字を入力):</div>
+                    <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">コードを入力してTAB譜に自動反映 (例: f, c, am):</div>
                     <div class="guitar-input-group">
-                        <select id="modal-guitar-string" style="flex: 1;">
-                            <option value="1">1弦 (E)</option>
-                            <option value="2">2弦 (B)</option>
-                            <option value="3">3弦 (G)</option>
-                            <option value="4">4弦 (D)</option>
-                            <option value="5">5弦 (A)</option>
-                            <option value="6">6弦 (E)</option>
-                        </select>
-                        <input type="text" id="modal-guitar-fret" placeholder="フレット番号や文字 (例: 3, f, b)" style="flex: 2;">
-                        <button type="button" id="btn-add-guitar-note" style="padding: 0.8rem 2rem;">追加</button>
+                        <input type="text" id="modal-guitar-chord" placeholder="コード名を入力 (例: f, c)" style="flex: 2;">
+                        <button type="button" id="btn-add-guitar-chord" style="padding: 0.8rem 2rem;">コード追加</button>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <div class="action-buttons">
-                    <button type="button" class="secondary" id="btn-undo-note">1音消す</button>
+                    <button type="button" class="secondary" id="btn-undo-note">1つ消す</button>
                     <button type="button" class="danger" id="btn-clear-score">すべて消す</button>
                 </div>
                 <button type="button" id="btn-save-score">ファイル保存</button>
@@ -531,7 +524,7 @@
         function openInstrumentModal(inst) {
             activeInstrument = inst;
             document.getElementById('instrument-modal').style.display = 'flex';
-            document.getElementById('modal-title').textContent = inst === 'piano' ? '🎹 ピアノ 楽譜エディタ (88鍵盤)' : '🎸 ギター 楽譜エディタ (TAB譜)';
+            document.getElementById('modal-title').textContent = inst === 'piano' ? '🎹 ピアノ 楽譜エディタ (5線譜)' : '🎸 ギター 楽譜エディタ (TAB譜)';
             
             document.getElementById('modal-piano-section').style.display = inst === 'piano' ? 'flex' : 'none';
             document.getElementById('modal-guitar-section').style.display = inst === 'guitar' ? 'flex' : 'none';
@@ -546,30 +539,47 @@
         document.getElementById('btn-open-guitar').addEventListener('click', () => openInstrumentModal('guitar'));
         document.getElementById('btn-close-modal').addEventListener('click', closeInstrumentModal);
 
-        const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        // ピアノ用（ドレミ表示）
+        const solfègeKeys = [
+            { name: "ド", note: "C4" }, { name: "ド#", note: "C#4" },
+            { name: "レ", note: "D4" }, { name: "レ#", note: "D#4" },
+            { name: "ミ", note: "E4" },
+            { name: "ファ", note: "F4" }, { name: "ファ#", note: "F#4" },
+            { name: "ソ", note: "G4" }, { name: "ソ#", note: "G#4" },
+            { name: "ラ", note: "A4" }, { name: "ラ#", note: "A#4" },
+            { name: "シ", note: "B4" },
+            { name: "高いド", note: "C5" }
+        ];
+        
         const modalPianoKeysGrid = document.getElementById('modal-piano-keys-grid');
-        for (let midi = 21; midi <= 108; midi++) {
-            const noteNameIndex = (midi - 12) % 12;
-            const octave = Math.floor((midi - 12) / 12);
-            const name = noteNames[noteNameIndex] + octave;
-
+        modalPianoKeysGrid.innerHTML = '';
+        solfègeKeys.forEach(k => {
             const keyEl = document.createElement('div');
             keyEl.className = 'piano-big-key';
-            keyEl.textContent = name;
+            keyEl.textContent = k.name;
             keyEl.onclick = () => {
-                scoreNotes.push({ type: 'piano', note: name });
+                scoreNotes.push({ type: 'piano', label: k.name, note: k.note });
                 renderModalScorePreview();
             };
             modalPianoKeysGrid.appendChild(keyEl);
-        }
+        });
 
-        document.getElementById('btn-add-guitar-note').addEventListener('click', () => {
-            const stringNum = document.getElementById('modal-guitar-string').value;
-            const fretVal = document.getElementById('modal-guitar-fret').value.trim();
-            if (!fretVal) return;
+        // ギターコード自動変換定義
+        const chordTabMap = {
+            "f": "1(E):-1-\n2(B):-1-\n3(G):-2-\n4(D):-3-\n5(A):-3-\n6(E):-1-",
+            "c": "1(E):-0-\n2(B):-1-\n3(G):-0-\n4(D):-2-\n5(A):-3-\n6(E):---",
+            "g": "1(E):-3-\n2(B):-0-\n3(G):-0-\n4(D):-0-\n5(A):-2-\n6(E):-3-",
+            "am": "1(E):-0-\n2(B):-1-\n3(G):-2-\n4(D):-2-\n5(A):-0-\n6(E):---",
+            "em": "1(E):-0-\n2(B):-0-\n3(G):-0-\n4(D):-2-\n5(A):-2-\n6(E):-0-"
+        };
 
-            scoreNotes.push({ type: 'guitar', string: stringNum, fret: fretVal });
-            document.getElementById('modal-guitar-fret').value = '';
+        document.getElementById('btn-add-guitar-chord').addEventListener('click', () => {
+            const chordInput = document.getElementById('modal-guitar-chord').value.trim().toLowerCase();
+            if (!chordInput) return;
+
+            let tabShape = chordTabMap[chordInput] || `1(E):-[${chordInput}]-\n2(B):----\n3(G):----\n4(D):----\n5(A):----\n6(E):----`;
+            scoreNotes.push({ type: 'guitar', chord: chordInput, shape: tabShape });
+            document.getElementById('modal-guitar-chord').value = '';
             renderModalScorePreview();
         });
 
@@ -586,26 +596,21 @@
         function renderModalScorePreview() {
             const previewEl = document.getElementById('modal-score-preview');
             if (scoreNotes.length === 0) {
-                previewEl.textContent = activeInstrument === 'piano' ? "[五線譜ビュー] 鍵盤をクリックすると音符が追加されます" : "[TAB譜ビュー] フレット文字を入力して追加してください";
+                previewEl.textContent = activeInstrument === 'piano' ? "[5線譜ビュー] ドレミの鍵盤をクリックすると音符が追加されます" : "[TAB譜ビュー] fやcなどのコードを入力すると自動でTAB譜が追加されます";
                 return;
             }
 
             if (activeInstrument === 'piano') {
-                const notesStr = scoreNotes.map(n => n.note).join(" - ");
-                previewEl.innerHTML = "E5 |------------------------------------------<br>C5 |-------- " + notesStr + "<br>A4 |------------------------------------------";
+                const notesStr = scoreNotes.map(n => n.label).join(" ➔ ");
+                previewEl.innerHTML = "高音 |------------------------------------------<br>" +
+                                      "ト音記号 [ " + notesStr + " ]<br>" +
+                                      "低音 |------------------------------------------";
             } else {
-                let lines = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
-                scoreNotes.forEach(n => {
-                    if (n.type === 'guitar') { lines[n.string].push(n.fret); }
+                let htmlOutput = "";
+                scoreNotes.forEach((n, idx) => {
+                    htmlOutput += `【 拍 ${idx + 1} : コード [${n.chord.toUpperCaseAnchor ? n.chord.toUpperCase() : n.chord.toUpperCase()}] 】<br>` + n.shape.replace(/\n/g, '<br>') + "<br><br>";
                 });
-
-                previewEl.innerHTML = 
-                    "1(E): " + (lines[1].length ? lines[1].join("-") : "---") + "<br>" +
-                    "2(B): " + (lines[2].length ? lines[2].join("-") : "---") + "<br>" +
-                    "3(G): " + (lines[3].length ? lines[3].join("-") : "---") + "<br>" +
-                    "4(D): " + (lines[4].length ? lines[4].join("-") : "---") + "<br>" +
-                    "5(A): " + (lines[5].length ? lines[5].join("-") : "---") + "<br>" +
-                    "6(E): " + (lines[6].length ? lines[6].join("-") : "---");
+                previewEl.innerHTML = htmlOutput;
             }
         }
 
@@ -653,7 +658,7 @@
             try {
                 const response = await fetch('/api/chat', { method: 'POST', body: formData });
                 const data = await response.json();
-                removeMessage(loadingId);
+            removeMessage(loadingId);
                 if (data.reply) { appendMessage(data.reply, 'assistant'); }
                 else { appendMessage('エラーが発生しました。', 'assistant'); }
             } catch (error) {
