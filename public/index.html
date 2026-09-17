@@ -1,4 +1,3 @@
-==> Running 'node server.js'
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -63,7 +62,6 @@
             padding: 1.5rem;
         }
 
-        /* チャットエリア */
         .chat-section {
             flex: 1;
             background: var(--card-bg);
@@ -164,7 +162,6 @@
         button.danger { background-color: #ef4444; }
         button.danger:hover { background-color: #dc2626; }
 
-        /* サイドパネル（メトロノーム＆楽器選択トリガー） */
         .side-panel {
             width: 380px;
             display: flex;
@@ -214,7 +211,6 @@
 
         input[type="range"] { flex: 1; }
 
-        /* 楽器選択ボタン群 */
         .instrument-launchers {
             display: flex;
             gap: 0.75rem;
@@ -242,7 +238,6 @@
             color: var(--primary-color);
         }
 
-        /* --- 拡大モーダル画面（画面いっぱいに表示） --- */
         #instrument-modal {
             display: none;
             position: fixed;
@@ -292,7 +287,6 @@
             overflow-y: auto;
         }
 
-        /* 大きな楽譜プレビューエリア */
         .big-score-preview {
             background: #f8fafc;
             border: 2px dashed var(--border-color);
@@ -308,7 +302,6 @@
             align-items: center;
         }
 
-        /* 88鍵盤ピアノの大きなグリッド */
         .piano-big-container {
             display: flex;
             flex-direction: column;
@@ -344,7 +337,6 @@
             color: white;
         }
 
-        /* ギター用大きなコントロール */
         .guitar-big-container {
             display: flex;
             flex-direction: column;
@@ -393,10 +385,9 @@
     </header>
 
     <div class="main-container">
-        <!-- チャットセクション -->
         <div class="chat-section">
             <div id="chat-box">
-                <div class="message assistant">こんにちは！otomoへようこそ。音楽の質問だけでなく、**楽譜の画像や演奏動画**をアップロードしてAIに分析してもらうこともできますよ！</div>
+                <div class="message assistant">こんにちは！otomoへようこそ。音楽の質問だけでなく、楽譜の画像や演奏動画をアップロードしてAIに分析してもらうこともできますよ！</div>
             </div>
             <form class="input-form" id="chat-form">
                 <div class="input-row">
@@ -413,9 +404,7 @@
             </form>
         </div>
 
-        <!-- サイドパネル -->
         <div class="side-panel">
-            <!-- メトロノーム機能 -->
             <div class="card">
                 <div class="card-header">⏱️ メトロノーム</div>
                 <div class="card-body">
@@ -429,16 +418,15 @@
                 </div>
             </div>
 
-            <!-- 楽譜メーカー起動カード -->
             <div class="card">
                 <div class="card-header">🎼 楽譜メーカー</div>
                 <div class="card-body">
                     <p style="font-size: 0.85rem; color: var(--text-sub);">楽器を選択すると、画面いっぱいに専用エディタが開きます：</p>
                     <div class="instrument-launchers">
-                        <button type="button" class="launch-btn" onclick="openInstrumentModal('piano')">
+                        <button type="button" class="launch-btn" id="btn-open-piano">
                             <span>🎹</span> ピアノ (88鍵)
                         </button>
-                        <button type="button" class="launch-btn" onclick="openInstrumentModal('guitar')">
+                        <button type="button" class="launch-btn" id="btn-open-guitar">
                             <span>🎸</span> ギター (TAB譜)
                         </button>
                     </div>
@@ -447,15 +435,13 @@
         </div>
     </div>
 
-    <!-- 楽器専用 拡大画面モーダル -->
     <div id="instrument-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modal-title">🎹 ピアノ 楽譜エディタ</h2>
-                <button type="button" class="secondary" onclick="closeInstrumentModal()">閉じる</button>
+                <button type="button" class="secondary" id="btn-close-modal">閉じる</button>
             </div>
             <div class="modal-body">
-                <!-- 楽譜プレビュー -->
                 <div>
                     <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-sub);">リアルタイム楽譜ビュー:</div>
                     <div class="big-score-preview" id="modal-score-preview">
@@ -463,15 +449,11 @@
                     </div>
                 </div>
 
-                <!-- ピアノ88鍵盤ビュー -->
                 <div id="modal-piano-section" class="piano-big-container">
                     <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">88鍵盤から音を選択して追加:</div>
-                    <div class="piano-big-grid" id="modal-piano-keys-grid">
-                        <!-- JSで全鍵盤生成 -->
-                    </div>
+                    <div class="piano-big-grid" id="modal-piano-keys-grid"></div>
                 </div>
 
-                <!-- ギターTAB入力ビュー -->
                 <div id="modal-guitar-section" class="guitar-big-container" style="display: none;">
                     <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">ギターTAB譜の入力 (フレット・文字を入力):</div>
                     <div class="guitar-input-group">
@@ -484,22 +466,21 @@
                             <option value="6">6弦 (E)</option>
                         </select>
                         <input type="text" id="modal-guitar-fret" placeholder="フレット番号や文字 (例: 3, f, b)" style="flex: 2;">
-                        <button type="button" onclick="addModalGuitarNote()" style="padding: 0.8rem 2rem;">追加</button>
+                        <button type="button" id="btn-add-guitar-note" style="padding: 0.8rem 2rem;">追加</button>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <div class="action-buttons">
-                    <button type="button" class="secondary" onclick="undoModalNote()">1音消す</button>
-                    <button type="button" class="danger" onclick="clearModalScore()">すべて消す</button>
+                    <button type="button" class="secondary" id="btn-undo-note">1音消す</button>
+                    <button type="button" class="danger" id="btn-clear-score">すべて消す</button>
                 </div>
-                <button type="button" onclick="saveModalScoreFile()">ファイル保存</button>
+                <button type="button" id="btn-save-score">ファイル保存</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- メトロノーム機能 ---
         let audioCtx = null;
         let isPlaying = false;
         let timerId = null;
@@ -511,7 +492,7 @@
 
         tempoSlider.addEventListener('input', (e) => {
             bpm = e.target.value;
-            tempoDisplay.textContent = `${bpm} BPM`;
+            tempoDisplay.textContent = bpm + " BPM";
             if (isPlaying) { stopMetronome(); startMetronome(); }
         });
 
@@ -544,7 +525,6 @@
 
         function stopMetronome() { clearInterval(timerId); isPlaying = false; }
 
-        // --- 拡大モーダル楽譜エディタ ---
         let activeInstrument = 'piano';
         let scoreNotes = [];
 
@@ -562,7 +542,10 @@
             document.getElementById('instrument-modal').style.display = 'none';
         }
 
-        // 88鍵盤生成
+        document.getElementById('btn-open-piano').addEventListener('click', () => openInstrumentModal('piano'));
+        document.getElementById('btn-open-guitar').addEventListener('click', () => openInstrumentModal('guitar'));
+        document.getElementById('btn-close-modal').addEventListener('click', closeInstrumentModal);
+
         const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
         const modalPianoKeysGrid = document.getElementById('modal-piano-keys-grid');
         for (let midi = 21; midi <= 108; midi++) {
@@ -580,7 +563,7 @@
             modalPianoKeysGrid.appendChild(keyEl);
         }
 
-        function addModalGuitarNote() {
+        document.getElementById('btn-add-guitar-note').addEventListener('click', () => {
             const stringNum = document.getElementById('modal-guitar-string').value;
             const fretVal = document.getElementById('modal-guitar-fret').value.trim();
             if (!fretVal) return;
@@ -588,17 +571,17 @@
             scoreNotes.push({ type: 'guitar', string: stringNum, fret: fretVal });
             document.getElementById('modal-guitar-fret').value = '';
             renderModalScorePreview();
-        }
+        });
 
-        function undoModalNote() {
+        document.getElementById('btn-undo-note').addEventListener('click', () => {
             scoreNotes.pop();
             renderModalScorePreview();
-        }
+        });
 
-        function clearModalScore() {
+        document.getElementById('btn-clear-score').addEventListener('click', () => {
             scoreNotes = [];
             renderModalScorePreview();
-        }
+        });
 
         function renderModalScorePreview() {
             const previewEl = document.getElementById('modal-score-preview');
@@ -609,31 +592,24 @@
 
             if (activeInstrument === 'piano') {
                 const notesStr = scoreNotes.map(n => n.note).join(" - ");
-                previewEl.innerHTML = `
-                    E5 |------------------------------------------<br>
-                    C5 |-------- ${notesStr} <br>
-                    A4 |------------------------------------------<br>
-                    F4 |------------------------------------------<br>
-                    D4 |------------------------------------------
-                `;
+                previewEl.innerHTML = "E5 |------------------------------------------<br>C5 |-------- " + notesStr + "<br>A4 |------------------------------------------";
             } else {
                 let lines = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
                 scoreNotes.forEach(n => {
                     if (n.type === 'guitar') { lines[n.string].push(n.fret); }
                 });
 
-                previewEl.innerHTML = `
-                    1(E): ` + (lines[1].length ? lines[1].join("-") : "---") + `<br>
-                    2(B): ` + (lines[2].length ? lines[2].join("-") : "---") + `<br>
-                    3(G): ` + (lines[3].length ? lines[3].join("-") : "---") + `<br>
-                    4(D): ` + (lines[4].length ? lines[4].join("-") : "---") + `<br>
-                    5(A): ` + (lines[5].length ? lines[5].join("-") : "---") + `<br>
-                    6(E): ` + (lines[6].length ? lines[6].join("-") : "---")
-                `;
+                previewEl.innerHTML = 
+                    "1(E): " + (lines[1].length ? lines[1].join("-") : "---") + "<br>" +
+                    "2(B): " + (lines[2].length ? lines[2].join("-") : "---") + "<br>" +
+                    "3(G): " + (lines[3].length ? lines[3].join("-") : "---") + "<br>" +
+                    "4(D): " + (lines[4].length ? lines[4].join("-") : "---") + "<br>" +
+                    "5(A): " + (lines[5].length ? lines[5].join("-") : "---") + "<br>" +
+                    "6(E): " + (lines[6].length ? lines[6].join("-") : "---");
             }
         }
 
-        function saveModalScoreFile() {
+        document.getElementById('btn-save-score').addEventListener('click', () => {
             if (scoreNotes.length === 0) {
                 alert("保存する楽譜データがありません！");
                 return;
@@ -641,13 +617,12 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scoreNotes, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `otomo_score_${activeInstrument}_${Date.now()}.json`);
+            downloadAnchor.setAttribute("download", "otomo_score_" + activeInstrument + "_" + Date.now() + ".json");
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
-        }
+        });
 
-        // --- チャット ＆ マルチモーダル送信処理 ---
         const chatBox = document.getElementById('chat-box');
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
@@ -665,7 +640,7 @@
             if (!message && !file) return;
 
             let displayText = message;
-            if (file) displayText += ` [添付ファイル: ${file.name}]`;
+            if (file) displayText += " [添付ファイル: " + file.name + "]";
 
             appendMessage(displayText, 'user');
             userInput.value = '';
@@ -692,7 +667,7 @@
 
         function appendMessage(text, sender) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
+            messageDiv.className = "message " + sender;
             messageDiv.textContent = text;
             const id = 'msg-' + Date.now() + Math.random();
             messageDiv.id = id;
