@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>otomo - AI音楽学習 & 楽譜プラットフォーム</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4f46e5;
@@ -13,6 +16,11 @@
             --text-main: #1e293b;
             --text-sub: #64748b;
             --border-color: #e2e8f0;
+            --tab-bg: #090d16;
+            --tab-string: #475569;
+            --tab-note: #38bdf8;
+            --tab-chord: #f43f5e;
+            --tab-fret-bg: #1e293b;
         }
 
         * {
@@ -22,7 +30,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             display: flex;
@@ -256,7 +264,7 @@
         .modal-content {
             background: white;
             width: 100%;
-            max-width: 950px;
+            max-width: 1000px;
             height: 90vh;
             border-radius: 16px;
             display: flex;
@@ -284,12 +292,11 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.5rem;
             overflow-y: auto;
-            align-items: center;
         }
 
-        /* ピアノのキャンバス楽譜エリア */
+        /* ピアノ用五線譜スタイル */
         #score-container {
             background: white;
             padding: 10px;
@@ -306,7 +313,6 @@
             max-width: 100%;
         }
 
-        /* ピアノ鍵盤（提供していただいたスタイル） */
         .keyboard {
             display: flex;
             position: relative;
@@ -315,81 +321,121 @@
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             margin-top: 5px;
-        }
-
-        .key {
-            user-select: none;
-            cursor: pointer;
-        }
-
-        .white-key {
-            width: 45px;
-            height: 150px;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 0 0 5px 5px;
-            display: flex;
-            align-items: flex-end;
             justify-content: center;
-            padding-bottom: 10px;
-            font-weight: bold;
-            font-size: 0.85rem;
-            color: #555;
-            box-sizing: border-box;
         }
 
+        .key { user-select: none; cursor: pointer; }
+        .white-key {
+            width: 45px; height: 150px; background: white; border: 1px solid #ccc;
+            border-radius: 0 0 5px 5px; display: flex; align-items: flex-end;
+            justify-content: center; padding-bottom: 10px; font-weight: bold; font-size: 0.85rem; color: #555; box-sizing: border-box;
+        }
         .white-key:active { background: #eee; }
-
         .black-key {
-            width: 26px;
-            height: 95px;
-            background: #222;
-            position: absolute;
-            border-radius: 0 0 3px 3px;
-            z-index: 2;
-            margin-left: -13px;
+            width: 26px; height: 95px; background: #222; position: absolute;
+            border-radius: 0 0 3px 3px; z-index: 2; margin-left: -13px;
         }
-
         .black-key:active { background: #444; }
 
-        /* ギターTAB譜用エリア */
-        .guitar-big-container {
-            width: 100%;
+        /* ギターTAB譜エディタ専用スタイル (ご提示いただいたコードベース) */
+        .guitar-generator-wrapper {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            background: #f1f5f9;
-            padding: 2rem;
+            width: 100%;
+        }
+
+        .generator-card {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            border: 1px solid var(--border-color);
+            padding: 20px;
+            color: #f8fafc;
         }
 
-        .guitar-input-group {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 0.9rem; font-weight: 500; color: #e2e8f0; display: flex; justify-content: space-between; }
 
-        .guitar-input-group input {
-            padding: 0.8rem 1rem;
-            border: 1px solid var(--border-color);
+        .guitar-chord-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1.05rem;
+            font-family: 'Fira Code', monospace;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
             border-radius: 8px;
-            font-size: 1rem;
-            flex: 1;
+            color: #ffffff;
+            outline: none;
         }
+        .guitar-chord-input:focus { border-color: var(--primary-color); }
+
+        .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+        .chip-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .chip-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+
+        .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+        .output-title { font-size: 1rem; font-weight: 600; color: #e2e8f0; }
+
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .action-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 12px; font-size: 0.82rem; font-weight: 500;
+            border-radius: 6px; border: none; cursor: pointer;
+        }
+
+        .tab-viewport {
+            background: var(--tab-bg);
+            border-radius: 10px;
+            padding: 20px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-x: auto;
+        }
+        .tab-grid { display: flex; flex-direction: column; min-width: max-content; font-family: 'Fira Code', monospace; }
+        .tab-row { display: flex; align-items: center; height: 30px; position: relative; }
+        .chord-row { height: 32px; margin-bottom: 6px; }
+
+        .string-label { width: 65px; font-size: 0.8rem; font-weight: 600; color: var(--text-sub); text-align: right; padding-right: 12px; }
+        .chord-header-space { width: 65px; }
+        .chord-badge { width: 70px; text-align: center; font-weight: 700; font-size: 1rem; color: var(--tab-chord); }
+
+        .string-line-container { display: flex; align-items: center; position: relative; flex: 1; }
+        .string-line { position: absolute; left: 0; right: 0; top: 50%; height: 1.5px; background-color: var(--tab-string); z-index: 1; }
+        .tab-row:nth-child(5) .string-line { height: 2px; }
+        .tab-row:nth-child(6) .string-line { height: 2.5px; }
+        .tab-row:nth-child(7) .string-line { height: 3px; }
+
+        .fret-slot { width: 70px; display: flex; justify-content: center; align-items: center; z-index: 2; }
+        .fret-number {
+            width: 24px; height: 24px; border-radius: 5px;
+            background: var(--tab-fret-bg); border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--tab-note); font-weight: 600; font-size: 0.85rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fret-number.mute { color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
+        .fret-number.open { color: #10b981; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
+
+        .toast {
+            position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white;
+            padding: 10px 18px; border-radius: 8px; font-weight: 500; font-size: 0.9rem;
+            opacity: 0; transform: translateY(50px); transition: all 0.3s ease; z-index: 2000;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
 
         .modal-footer {
             padding: 1rem 2rem;
             background: #f8fafc;
             border-top: 1px solid var(--border-color);
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 0.75rem;
         }
     </style>
 </head>
@@ -466,7 +512,6 @@
                     <div id="score-container">
                         <canvas id="staffCanvas" width="700" height="150"></canvas>
                     </div>
-                    <!-- ピアノ鍵盤（ド〜ド） -->
                     <div class="keyboard">
                         <div class="key white-key" onclick="playAndAddNote('C4', 0)">ド</div>
                         <div class="key black-key" style="left: 41px;" onclick="playAndAddNote('C#4', 0.5)"></div>
@@ -482,32 +527,56 @@
                         <div class="key white-key" onclick="playAndAddNote('B4', 6)">シ</div>
                         <div class="key white-key" onclick="playAndAddNote('C5', 7)">高いド</div>
                     </div>
+                    <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; margin-top: 0.5rem;">
+                        <button type="button" class="secondary" onclick="pianoNotesHistory.pop(); redrawStaff();">1つ消す</button>
+                        <button type="button" class="danger" onclick="pianoNotesHistory = []; redrawStaff();">すべて消す</button>
+                    </div>
                 </div>
 
-                <!-- ギター用 TAB譜ビュー -->
-                <div id="modal-guitar-section" class="guitar-big-container" style="display: none;">
-                    <div>
-                        <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-sub);">リアルタイムTAB譜ビュー:</div>
-                        <div id="guitar-score-preview" style="background: white; border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 1.1rem; min-height: 120px; white-space: pre-wrap;">
-                            [fやcなどのコードを入力すると自動でTAB譜が追加されます]
+                <!-- ギター用 TAB譜ジェネレーターセクション -->
+                <div id="modal-guitar-section" class="guitar-generator-wrapper" style="display: none;">
+                    <div class="generator-card">
+                        <div class="input-group">
+                            <label for="chordInput">
+                                <span>コード進行を入力</span>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">カンマまたはスペース区切り</span>
+                            </label>
+                            <input type="text" id="chordInput" class="guitar-chord-input" placeholder="例: C, G, Am, F" value="C, G, Am, F" spellcheck="false">
+                        </div>
+                        <div class="quick-buttons">
+                            <span style="font-size: 0.8rem; color: var(--text-sub);">プリセット:</span>
+                            <button class="chip-btn" onclick="setChords('C, G, Am, F')">王道進行 (C-G-Am-F)</button>
+                            <button class="chip-btn" onclick="setChords('F, G, Em, Am')">小室進行 (F-G-Em-Am)</button>
+                            <button class="chip-btn" onclick="setChords('Dm, G, C, Am')">ツーファイブ (Dm-G-C-Am)</button>
                         </div>
                     </div>
-                    <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">コードを入力してTAB譜に自動反映 (例: f, c, am, g, em):</div>
-                    <div class="guitar-input-group">
-                        <input type="text" id="modal-guitar-chord" placeholder="コード名を入力 (例: f, c)" style="flex: 2;">
-                        <button type="button" id="btn-add-guitar-chord" style="padding: 0.8rem 2rem;">コード追加</button>
+
+                    <div class="generator-card">
+                        <div class="output-header">
+                            <div class="output-title">生成されたタブ譜</div>
+                            <div class="btn-group">
+                                <button class="action-btn btn-secondary" style="background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1);" onclick="copyTextTab()">📋 テキストコピー</button>
+                                <button class="action-btn btn-secondary" style="background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1);" onclick="downloadTextTab()">📄 TXT保存</button>
+                                <button class="action-btn btn-primary" style="background: var(--primary-color); color: white;" onclick="downloadImageTab()">🖼️ 画像保存 (PNG)</button>
+                            </div>
+                        </div>
+
+                        <div class="tab-viewport" id="tabViewport">
+                            <div class="tab-grid" id="tabGrid"></div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <div class="action-buttons">
-                    <button type="button" class="secondary" id="btn-undo-note">1つ消す</button>
-                    <button type="button" class="danger" id="btn-clear-score">すべて消す</button>
-                </div>
-                <button type="button" id="btn-save-score">ファイル保存</button>
+                <button type="button" class="secondary" id="btn-close-modal-footer">閉じる</button>
             </div>
         </div>
     </div>
+
+    <div id="toast" class="toast">完了しました！</div>
+
+    <!-- HTMLを画像化するライブラリ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
         // --- メトロノーム機能 ---
@@ -555,13 +624,8 @@
 
         function stopMetronome() { clearInterval(timerId); isPlaying = false; }
 
-        // --- モーダル＆楽器エディタ制御 ---
-        let activeInstrument = 'piano';
-        let pianoNotesHistory = [];
-        let guitarNotesHistory = [];
-
+        // --- モーダル制御 ---
         function openInstrumentModal(inst) {
-            activeInstrument = inst;
             document.getElementById('instrument-modal').style.display = 'flex';
             document.getElementById('modal-title').textContent = inst === 'piano' ? '🎹 ピアノ 楽譜エディタ (五線譜)' : '🎸 ギター 楽譜エディタ (TAB譜)';
             
@@ -569,9 +633,9 @@
             document.getElementById('modal-guitar-section').style.display = inst === 'guitar' ? 'flex' : 'none';
             
             if (inst === 'piano') {
-                setTimeout(redrawStaff, 50); // モーダルが開いた後にCanvasを正確に描画
+                setTimeout(redrawStaff, 50);
             } else {
-                renderGuitarPreview();
+                renderTab();
             }
         }
 
@@ -582,8 +646,10 @@
         document.getElementById('btn-open-piano').addEventListener('click', () => openInstrumentModal('piano'));
         document.getElementById('btn-open-guitar').addEventListener('click', () => openInstrumentModal('guitar'));
         document.getElementById('btn-close-modal').addEventListener('click', closeInstrumentModal);
+        document.getElementById('btn-close-modal-footer').addEventListener('click', closeInstrumentModal);
 
-        // --- ピアノ音源・五線譜キャンバス描画ロジック ---
+        // --- ピアノ用機能 ---
+        let pianoNotesHistory = [];
         const frequencies = {
             'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
             'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
@@ -599,7 +665,6 @@
 
             osc.type = 'sine';
             osc.frequency.setValueAtTime(frequencies[note], audioCtx.currentTime);
-
             gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
 
@@ -684,74 +749,138 @@
             drawStaffNotes();
         }
 
-        // --- ギターTAB譜機能 ---
-        const chordTabMap = {
-            "f": "1(E):-1-\n2(B):-1-\n3(G):-2-\n4(D):-3-\n5(A):-3-\n6(E):-1-",
-            "c": "1(E):-0-\n2(B):-1-\n3(G):-0-\n4(D):-2-\n5(A):-3-\n6(E):---",
-            "g": "1(E):-3-\n2(B):-0-\n3(G):-0-\n4(D):-0-\n5(A):-2-\n6(E):-3-",
-            "am": "1(E):-0-\n2(B):-1-\n3(G):-2-\n4(D):-2-\n5(A):-0-\n6(E):---",
-            "em": "1(E):-0-\n2(B):-0-\n3(G):-0-\n4(D):-2-\n5(A):-2-\n6(E):-0-"
+        // --- ギターTAB譜ジェネレーター機能 (ご提示コード) ---
+        const chordDb = {
+            "C": ["0", "1", "0", "2", "3", "x"], "D": ["2", "3", "2", "0", "x", "x"], "E": ["0", "0", "1", "2", "2", "0"],
+            "F": ["1", "1", "2", "3", "3", "1"], "G": ["3", "0", "0", "0", "2", "3"], "A": ["0", "2", "2", "2", "0", "x"],
+            "B": ["2", "4", "4", "4", "2", "x"], "Cm": ["3", "4", "5", "5", "3", "x"], "Dm": ["1", "3", "2", "0", "x", "x"],
+            "Em": ["0", "0", "0", "2", "2", "0"], "Fm": ["1", "1", "1", "3", "3", "1"], "Gm": ["3", "3", "3", "5", "5", "3"],
+            "Am": ["0", "1", "2", "2", "0", "x"], "Bm": ["2", "3", "4", "4", "2", "x"], "C7": ["0", "1", "3", "2", "3", "x"],
+            "D7": ["2", "1", "2", "0", "x", "x"], "E7": ["0", "0", "1", "0", "2", "0"], "G7": ["1", "0", "0", "0", "2", "3"],
+            "A7": ["0", "2", "0", "2", "0", "x"], "B7": ["2", "0", "2", "1", "2", "x"], "CM7": ["0", "0", "0", "2", "3", "x"],
+            "FM7": ["0", "1", "2", "3", "x", "x"], "AM7": ["0", "2", "1", "2", "0", "x"], "Dm7": ["1", "1", "2", "0", "x", "x"],
+            "Em7": ["0", "0", "0", "0", "2", "0"], "Am7": ["0", "1", "0", "2", "0", "x"], "Csus4": ["1", "1", "0", "3", "3", "x"],
+            "Dsus4": ["3", "3", "2", "0", "x", "x"], "Gsus4": ["3", "1", "0", "0", "2", "3"]
         };
 
-        document.getElementById('btn-add-guitar-chord').addEventListener('click', () => {
-            const chordInput = document.getElementById('modal-guitar-chord').value.trim().toLowerCase();
-            if (!chordInput) return;
+        const stringLabels = ["1st (E)", "2nd (B)", "3rd (G)", "4th (D)", "5th (A)", "6th (E)"];
+        const chordInput = document.getElementById('chordInput');
+        const tabGrid = document.getElementById('tabGrid');
 
-            let tabShape = chordTabMap[chordInput] || `1(E):-[${chordInput}]-\n2(B):----\n3(G):----\n4(D):----\n5(A):----\n6(E):----`;
-            guitarNotesHistory.push({ chord: chordInput, shape: tabShape });
-            document.getElementById('modal-guitar-chord').value = '';
-            renderGuitarPreview();
-        });
-
-        function renderGuitarPreview() {
-            const previewEl = document.getElementById('guitar-score-preview');
-            if (guitarNotesHistory.length === 0) {
-                previewEl.textContent = "[TAB譜ビュー] fやcなどのコードを入力すると自動でTAB譜が追加されます";
-                return;
-            }
-
-            let htmlOutput = "";
-            guitarNotesHistory.forEach((n, idx) => {
-                htmlOutput += `【 拍 ${idx + 1} : コード [${n.chord.toUpperCase()}] 】\n` + n.shape + "\n\n";
-            });
-            previewEl.textContent = htmlOutput;
+        function formatChordName(raw) {
+            if (!raw) return "";
+            let c = raw.trim();
+            return c.length === 1 ? c.toUpperCase() : c.charAt(0).toUpperCase() + c.slice(1);
         }
 
-        // --- 共通の削除・保存機能 ---
-        document.getElementById('btn-undo-note').addEventListener('click', () => {
-            if (activeInstrument === 'piano') {
-                pianoNotesHistory.pop();
-                redrawStaff();
-            } else {
-                guitarNotesHistory.pop();
-                renderGuitarPreview();
-            }
-        });
+        function renderTab() {
+            const chords = chordInput.value.split(/[, ]+/).map(c => formatChordName(c)).filter(c => c !== "");
+            tabGrid.innerHTML = "";
 
-        document.getElementById('btn-clear-score').addEventListener('click', () => {
-            if (activeInstrument === 'piano') {
-                pianoNotesHistory = [];
-                redrawStaff();
-            } else {
-                guitarNotesHistory = [];
-                renderGuitarPreview();
-            }
-        });
-
-        document.getElementById('btn-save-score').addEventListener('click', () => {
-            const currentData = activeInstrument === 'piano' ? pianoNotesHistory : guitarNotesHistory;
-            if (currentData.length === 0) {
-                alert("保存する楽譜データがありません！");
+            if (chords.length === 0) {
+                tabGrid.innerHTML = '<div style="color: var(--text-muted, #94a3b8); padding: 20px; text-align: center;">コードを入力するとここにタブ譜が表示されます</div>';
                 return;
             }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "otomo_score_" + activeInstrument + "_" + Date.now() + ".json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        });
+
+            const chordRow = document.createElement('div');
+            chordRow.className = 'tab-row chord-row';
+            chordRow.appendChild(Object.assign(document.createElement('div'), { className: 'chord-header-space' }));
+            chords.forEach(chord => {
+                const badge = document.createElement('div');
+                badge.className = 'chord-badge';
+                badge.textContent = chord;
+                chordRow.appendChild(badge);
+            });
+            tabGrid.appendChild(chordRow);
+
+            for (let stringIdx = 0; stringIdx < 6; stringIdx++) {
+                const row = document.createElement('div');
+                row.className = 'tab-row';
+
+                const label = document.createElement('div');
+                label.className = 'string-label';
+                label.textContent = stringLabels[stringIdx];
+                row.appendChild(label);
+
+                const lineContainer = document.createElement('div');
+                lineContainer.className = 'string-line-container';
+                lineContainer.appendChild(Object.assign(document.createElement('div'), { className: 'string-line' }));
+
+                chords.forEach(chord => {
+                    const fretSlot = document.createElement('div');
+                    fretSlot.className = 'fret-slot';
+                    const frets = chordDb[chord];
+                    const fretVal = frets ? frets[stringIdx] : '?';
+
+                    const fretNum = document.createElement('div');
+                    fretNum.className = 'fret-number';
+                    if (fretVal === 'x' || fretVal === 'X') {
+                        fretNum.classList.add('mute'); fretNum.textContent = '×';
+                    } else if (fretVal === '0') {
+                        fretNum.classList.add('open'); fretNum.textContent = '0';
+                    } else {
+                        fretNum.textContent = fretVal;
+                    }
+                    fretSlot.appendChild(fretNum);
+                    lineContainer.appendChild(fretSlot);
+                });
+
+                row.appendChild(lineContainer);
+                tabGrid.appendChild(row);
+            }
+        }
+
+        function setChords(str) { chordInput.value = str; renderTab(); }
+
+        function generateAsciiTab() {
+            const chords = chordInput.value.split(/[, ]+/).map(c => formatChordName(c)).filter(c => c !== "");
+            if (chords.length === 0) return "";
+            let header = "       ", lines = ["1st|", "2nd|", "3rd|", "4th|", "5th|", "6th|"];
+            chords.forEach(chord => {
+                header += chord.padEnd(7, ' ');
+                const frets = chordDb[chord];
+                for (let i = 0; i < 6; i++) lines[i] += `--${frets ? frets[i] : '?'}---`;
+            });
+            return header + "\n\n" + lines.map(l => l + "|").join("\n");
+        }
+
+        function copyTextTab() {
+            const ascii = generateAsciiTab();
+            if (!ascii) return;
+            navigator.clipboard.writeText(ascii).then(() => showToast("テキストタブ譜をコピーしました！"));
+        }
+
+        function downloadTextTab() {
+            const ascii = generateAsciiTab();
+            if (!ascii) return;
+            const blob = new Blob([ascii], { type: 'text/plain;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'guitar_tab.txt';
+            a.click();
+            showToast("TXTファイルを保存しました！");
+        }
+
+        function downloadImageTab() {
+            const target = document.getElementById('tabViewport');
+            showToast("画像を生成中...");
+            html2canvas(target, { backgroundColor: '#090d16', scale: 2 }).then(canvas => {
+                const a = document.createElement('a');
+                a.download = 'guitar_tab.png';
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+                showToast("PNG画像を保存しました！");
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        chordInput.addEventListener('input', renderTab);
 
         // --- チャット機能 ---
         const chatBox = document.getElementById('chat-box');
