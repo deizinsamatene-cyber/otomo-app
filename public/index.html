@@ -238,6 +238,7 @@
             color: var(--primary-color);
         }
 
+        /* モーダル画面 */
         #instrument-modal {
             display: none;
             position: fixed;
@@ -255,8 +256,8 @@
         .modal-content {
             background: white;
             width: 100%;
-            max-width: 1100px;
-            height: 85vh;
+            max-width: 950px;
+            height: 90vh;
             border-radius: 16px;
             display: flex;
             flex-direction: column;
@@ -279,65 +280,81 @@
         }
 
         .modal-body {
-            padding: 2rem;
+            padding: 1.5rem 2rem;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1rem;
             overflow-y: auto;
-        }
-
-        .big-score-preview {
-            background: #f8fafc;
-            border: 2px dashed var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            font-family: monospace;
-            font-size: 1.1rem;
-            min-height: 140px;
-            max-height: 200px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            display: flex;
             align-items: center;
         }
 
-        .piano-big-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            flex: 1;
-            background: #f1f5f9;
-            padding: 1rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            overflow-y: auto;
-        }
-
-        .piano-big-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 6px;
-        }
-
-        .piano-big-key {
+        /* ピアノのキャンバス楽譜エリア */
+        #score-container {
             background: white;
-            border: 1px solid #cbd5e1;
-            padding: 1rem 0.5rem;
-            font-size: 0.9rem;
-            font-weight: bold;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: background 0.1s;
-        }
-        .piano-big-key:hover {
-            background: var(--primary-color);
-            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            display: flex;
+            justify-content: center;
         }
 
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            max-width: 100%;
+        }
+
+        /* ピアノ鍵盤（提供していただいたスタイル） */
+        .keyboard {
+            display: flex;
+            position: relative;
+            background: #333;
+            padding: 10px 10px 0 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            margin-top: 5px;
+        }
+
+        .key {
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .white-key {
+            width: 45px;
+            height: 150px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 0 0 5px 5px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 10px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #555;
+            box-sizing: border-box;
+        }
+
+        .white-key:active { background: #eee; }
+
+        .black-key {
+            width: 26px;
+            height: 95px;
+            background: #222;
+            position: absolute;
+            border-radius: 0 0 3px 3px;
+            z-index: 2;
+            margin-left: -13px;
+        }
+
+        .black-key:active { background: #444; }
+
+        /* ギターTAB譜用エリア */
         .guitar-big-container {
+            width: 100%;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -422,10 +439,10 @@
             <div class="card">
                 <div class="card-header">🎼 楽譜メーカー</div>
                 <div class="card-body">
-                    <p style="font-size: 0.85rem; color: var(--text-sub);">楽器を選択すると、画面いっぱいに専用エディタが開きます：</p>
+                    <p style="font-size: 0.85rem; color: var(--text-sub);">楽器を選択すると、専用の高機能エディタが開きます：</p>
                     <div class="instrument-launchers">
                         <button type="button" class="launch-btn" id="btn-open-piano">
-                            <span>🎹</span> ピアノ (5線譜)
+                            <span>🎹</span> ピアノ (五線譜)
                         </button>
                         <button type="button" class="launch-btn" id="btn-open-guitar">
                             <span>🎸</span> ギター (TAB譜)
@@ -436,6 +453,7 @@
         </div>
     </div>
 
+    <!-- モーダルエディタ画面 -->
     <div id="instrument-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -443,20 +461,38 @@
                 <button type="button" class="secondary" id="btn-close-modal">閉じる</button>
             </div>
             <div class="modal-body">
-                <div>
-                    <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-sub);">リアルタイム五線譜ビュー:</div>
-                    <div class="big-score-preview" id="modal-score-preview">
-                        [五線譜に音符が追加されます]
+                <!-- ピアノ用 五線譜キャンバスビュー -->
+                <div id="modal-piano-section" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                    <div id="score-container">
+                        <canvas id="staffCanvas" width="700" height="150"></canvas>
+                    </div>
+                    <!-- ピアノ鍵盤（ド〜ド） -->
+                    <div class="keyboard">
+                        <div class="key white-key" onclick="playAndAddNote('C4', 0)">ド</div>
+                        <div class="key black-key" style="left: 41px;" onclick="playAndAddNote('C#4', 0.5)"></div>
+                        <div class="key white-key" onclick="playAndAddNote('D4', 1)">レ</div>
+                        <div class="key black-key" style="left: 86px;" onclick="playAndAddNote('D#4', 1.5)"></div>
+                        <div class="key white-key" onclick="playAndAddNote('E4', 2)">ミ</div>
+                        <div class="key white-key" onclick="playAndAddNote('F4', 3)">ファ</div>
+                        <div class="key black-key" style="left: 176px;" onclick="playAndAddNote('F#4', 3.5)"></div>
+                        <div class="key white-key" onclick="playAndAddNote('G4', 4)">ソ</div>
+                        <div class="key black-key" style="left: 221px;" onclick="playAndAddNote('G#4', 4.5)"></div>
+                        <div class="key white-key" onclick="playAndAddNote('A4', 5)">ラ</div>
+                        <div class="key black-key" style="left: 266px;" onclick="playAndAddNote('A#4', 5.5)"></div>
+                        <div class="key white-key" onclick="playAndAddNote('B4', 6)">シ</div>
+                        <div class="key white-key" onclick="playAndAddNote('C5', 7)">高いド</div>
                     </div>
                 </div>
 
-                <div id="modal-piano-section" class="piano-big-container">
-                    <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">鍵盤（ドレミ）をクリックして音符を追加:</div>
-                    <div class="piano-big-grid" id="modal-piano-keys-grid"></div>
-                </div>
-
+                <!-- ギター用 TAB譜ビュー -->
                 <div id="modal-guitar-section" class="guitar-big-container" style="display: none;">
-                    <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">コードを入力してTAB譜に自動反映 (例: f, c, am):</div>
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-sub);">リアルタイムTAB譜ビュー:</div>
+                        <div id="guitar-score-preview" style="background: white; border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 1.1rem; min-height: 120px; white-space: pre-wrap;">
+                            [fやcなどのコードを入力すると自動でTAB譜が追加されます]
+                        </div>
+                    </div>
+                    <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-sub);">コードを入力してTAB譜に自動反映 (例: f, c, am, g, em):</div>
                     <div class="guitar-input-group">
                         <input type="text" id="modal-guitar-chord" placeholder="コード名を入力 (例: f, c)" style="flex: 2;">
                         <button type="button" id="btn-add-guitar-chord" style="padding: 0.8rem 2rem;">コード追加</button>
@@ -474,6 +510,7 @@
     </div>
 
     <script>
+        // --- メトロノーム機能 ---
         let audioCtx = null;
         let isPlaying = false;
         let timerId = null;
@@ -518,17 +555,24 @@
 
         function stopMetronome() { clearInterval(timerId); isPlaying = false; }
 
+        // --- モーダル＆楽器エディタ制御 ---
         let activeInstrument = 'piano';
-        let scoreNotes = [];
+        let pianoNotesHistory = [];
+        let guitarNotesHistory = [];
 
         function openInstrumentModal(inst) {
             activeInstrument = inst;
             document.getElementById('instrument-modal').style.display = 'flex';
-            document.getElementById('modal-title').textContent = inst === 'piano' ? '🎹 ピアノ 楽譜エディタ (5線譜)' : '🎸 ギター 楽譜エディタ (TAB譜)';
+            document.getElementById('modal-title').textContent = inst === 'piano' ? '🎹 ピアノ 楽譜エディタ (五線譜)' : '🎸 ギター 楽譜エディタ (TAB譜)';
             
             document.getElementById('modal-piano-section').style.display = inst === 'piano' ? 'flex' : 'none';
             document.getElementById('modal-guitar-section').style.display = inst === 'guitar' ? 'flex' : 'none';
-            renderModalScorePreview();
+            
+            if (inst === 'piano') {
+                setTimeout(redrawStaff, 50); // モーダルが開いた後にCanvasを正確に描画
+            } else {
+                renderGuitarPreview();
+            }
         }
 
         function closeInstrumentModal() {
@@ -539,32 +583,108 @@
         document.getElementById('btn-open-guitar').addEventListener('click', () => openInstrumentModal('guitar'));
         document.getElementById('btn-close-modal').addEventListener('click', closeInstrumentModal);
 
-        // ピアノ用（ドレミ表示）
-        const solfègeKeys = [
-            { name: "ド", note: "C4" }, { name: "ド#", note: "C#4" },
-            { name: "レ", note: "D4" }, { name: "レ#", note: "D#4" },
-            { name: "ミ", note: "E4" },
-            { name: "ファ", note: "F4" }, { name: "ファ#", note: "F#4" },
-            { name: "ソ", note: "G4" }, { name: "ソ#", note: "G#4" },
-            { name: "ラ", note: "A4" }, { name: "ラ#", note: "A#4" },
-            { name: "シ", note: "B4" },
-            { name: "高いド", note: "C5" }
-        ];
-        
-        const modalPianoKeysGrid = document.getElementById('modal-piano-keys-grid');
-        modalPianoKeysGrid.innerHTML = '';
-        solfègeKeys.forEach(k => {
-            const keyEl = document.createElement('div');
-            keyEl.className = 'piano-big-key';
-            keyEl.textContent = k.name;
-            keyEl.onclick = () => {
-                scoreNotes.push({ type: 'piano', label: k.name, note: k.note });
-                renderModalScorePreview();
-            };
-            modalPianoKeysGrid.appendChild(keyEl);
-        });
+        // --- ピアノ音源・五線譜キャンバス描画ロジック ---
+        const frequencies = {
+            'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
+            'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
+            'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88, 'C5': 523.25
+        };
 
-        // ギターコード自動変換定義
+        function playSound(note) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(frequencies[note], audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.8);
+        }
+
+        function playAndAddNote(noteName, positionStep) {
+            playSound(noteName);
+            if (pianoNotesHistory.length >= 18) {
+                alert("これ以上音符を追加できません。リセットしてください。");
+                return;
+            }
+            pianoNotesHistory.push({ noteName, positionStep });
+            redrawStaff();
+        }
+
+        const canvas = document.getElementById('staffCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function drawStaffLines() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i < 5; i++) {
+                let y = 45 + i * 15;
+                ctx.beginPath();
+                ctx.moveTo(20, y);
+                ctx.lineTo(canvas.width - 20, y);
+                ctx.stroke();
+            }
+
+            ctx.font = '55px serif';
+            ctx.fillStyle = '#000';
+            ctx.fillText('🎼', 25, 110);
+        }
+
+        function drawStaffNotes() {
+            const startX = 100;
+            const noteSpacing = 30;
+            const lineSpacing = 7.5;
+            const bottomLineY = 105;
+
+            pianoNotesHistory.forEach((note, index) => {
+                const x = startX + index * noteSpacing;
+                const step = Math.floor(note.positionStep);
+                const isSharp = note.noteName.includes('#');
+                const y = bottomLineY - (step - 2) * lineSpacing;
+
+                if (isSharp) {
+                    ctx.font = '14px serif';
+                    ctx.fillStyle = '#000';
+                    ctx.fillText('♯', x - 12, y + 5);
+                }
+
+                if (step === 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(x - 10, y);
+                    ctx.lineTo(x + 10, y);
+                    ctx.stroke();
+                }
+
+                ctx.beginPath();
+                ctx.ellipse(x, y, 6, 4.5, -Math.PI / 6, 0, 2 * Math.PI);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(x + 5, y);
+                ctx.lineTo(x + 5, y - 25);
+                ctx.stroke();
+            });
+        }
+
+        function redrawStaff() {
+            drawStaffLines();
+            drawStaffNotes();
+        }
+
+        // --- ギターTAB譜機能 ---
         const chordTabMap = {
             "f": "1(E):-1-\n2(B):-1-\n3(G):-2-\n4(D):-3-\n5(A):-3-\n6(E):-1-",
             "c": "1(E):-0-\n2(B):-1-\n3(G):-0-\n4(D):-2-\n5(A):-3-\n6(E):---",
@@ -578,48 +698,53 @@
             if (!chordInput) return;
 
             let tabShape = chordTabMap[chordInput] || `1(E):-[${chordInput}]-\n2(B):----\n3(G):----\n4(D):----\n5(A):----\n6(E):----`;
-            scoreNotes.push({ type: 'guitar', chord: chordInput, shape: tabShape });
+            guitarNotesHistory.push({ chord: chordInput, shape: tabShape });
             document.getElementById('modal-guitar-chord').value = '';
-            renderModalScorePreview();
+            renderGuitarPreview();
         });
 
+        function renderGuitarPreview() {
+            const previewEl = document.getElementById('guitar-score-preview');
+            if (guitarNotesHistory.length === 0) {
+                previewEl.textContent = "[TAB譜ビュー] fやcなどのコードを入力すると自動でTAB譜が追加されます";
+                return;
+            }
+
+            let htmlOutput = "";
+            guitarNotesHistory.forEach((n, idx) => {
+                htmlOutput += `【 拍 ${idx + 1} : コード [${n.chord.toUpperCase()}] 】\n` + n.shape + "\n\n";
+            });
+            previewEl.textContent = htmlOutput;
+        }
+
+        // --- 共通の削除・保存機能 ---
         document.getElementById('btn-undo-note').addEventListener('click', () => {
-            scoreNotes.pop();
-            renderModalScorePreview();
+            if (activeInstrument === 'piano') {
+                pianoNotesHistory.pop();
+                redrawStaff();
+            } else {
+                guitarNotesHistory.pop();
+                renderGuitarPreview();
+            }
         });
 
         document.getElementById('btn-clear-score').addEventListener('click', () => {
-            scoreNotes = [];
-            renderModalScorePreview();
+            if (activeInstrument === 'piano') {
+                pianoNotesHistory = [];
+                redrawStaff();
+            } else {
+                guitarNotesHistory = [];
+                renderGuitarPreview();
+            }
         });
 
-        function renderModalScorePreview() {
-            const previewEl = document.getElementById('modal-score-preview');
-            if (scoreNotes.length === 0) {
-                previewEl.textContent = activeInstrument === 'piano' ? "[5線譜ビュー] ドレミの鍵盤をクリックすると音符が追加されます" : "[TAB譜ビュー] fやcなどのコードを入力すると自動でTAB譜が追加されます";
-                return;
-            }
-
-            if (activeInstrument === 'piano') {
-                const notesStr = scoreNotes.map(n => n.label).join(" ➔ ");
-                previewEl.innerHTML = "高音 |------------------------------------------<br>" +
-                                      "ト音記号 [ " + notesStr + " ]<br>" +
-                                      "低音 |------------------------------------------";
-            } else {
-                let htmlOutput = "";
-                scoreNotes.forEach((n, idx) => {
-                    htmlOutput += `【 拍 ${idx + 1} : コード [${n.chord.toUpperCaseAnchor ? n.chord.toUpperCase() : n.chord.toUpperCase()}] 】<br>` + n.shape.replace(/\n/g, '<br>') + "<br><br>";
-                });
-                previewEl.innerHTML = htmlOutput;
-            }
-        }
-
         document.getElementById('btn-save-score').addEventListener('click', () => {
-            if (scoreNotes.length === 0) {
+            const currentData = activeInstrument === 'piano' ? pianoNotesHistory : guitarNotesHistory;
+            if (currentData.length === 0) {
                 alert("保存する楽譜データがありません！");
                 return;
             }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scoreNotes, null, 2));
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
             downloadAnchor.setAttribute("download", "otomo_score_" + activeInstrument + "_" + Date.now() + ".json");
@@ -628,6 +753,7 @@
             downloadAnchor.remove();
         });
 
+        // --- チャット機能 ---
         const chatBox = document.getElementById('chat-box');
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
@@ -658,7 +784,7 @@
             try {
                 const response = await fetch('/api/chat', { method: 'POST', body: formData });
                 const data = await response.json();
-            removeMessage(loadingId);
+                removeMessage(loadingId);
                 if (data.reply) { appendMessage(data.reply, 'assistant'); }
                 else { appendMessage('エラーが発生しました。', 'assistant'); }
             } catch (error) {
