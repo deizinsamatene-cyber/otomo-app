@@ -305,12 +305,12 @@
             width: 100%;
             display: flex;
             justify-content: center;
+            overflow-x: auto;
         }
 
         canvas {
             border: 1px solid #ccc;
             background-color: #fff;
-            max-width: 100%;
         }
 
         .keyboard {
@@ -337,7 +337,7 @@
         }
         .black-key:active { background: #444; }
 
-        /* ギターTAB譜エディタ専用スタイル (ご提示いただいたコードベース) */
+        /* ギターTAB譜エディタスタイル */
         .guitar-generator-wrapper {
             display: flex;
             flex-direction: column;
@@ -510,7 +510,7 @@
                 <!-- ピアノ用 五線譜キャンバスビュー -->
                 <div id="modal-piano-section" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
                     <div id="score-container">
-                        <canvas id="staffCanvas" width="700" height="150"></canvas>
+                        <canvas id="staffCanvas" width="700" height="260"></canvas>
                     </div>
                     <div class="keyboard">
                         <div class="key white-key" onclick="playAndAddNote('C4', 0)">ド</div>
@@ -648,7 +648,7 @@
         document.getElementById('btn-close-modal').addEventListener('click', closeInstrumentModal);
         document.getElementById('btn-close-modal-footer').addEventListener('click', closeInstrumentModal);
 
-        // --- ピアノ用機能 ---
+        // --- ピアノ用機能 (2段自動折り返し対応) ---
         let pianoNotesHistory = [];
         const frequencies = {
             'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
@@ -677,7 +677,7 @@
 
         function playAndAddNote(noteName, positionStep) {
             playSound(noteName);
-            if (pianoNotesHistory.length >= 18) {
+            if (pianoNotesHistory.length >= 36) {
                 alert("これ以上音符を追加できません。リセットしてください。");
                 return;
             }
@@ -688,32 +688,45 @@
         const canvas = document.getElementById('staffCanvas');
         const ctx = canvas.getContext('2d');
 
-        function drawStaffLines() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function drawSystem(startY) {
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 1;
 
             for (let i = 0; i < 5; i++) {
-                let y = 45 + i * 15;
+                let y = startY + i * 15;
                 ctx.beginPath();
                 ctx.moveTo(20, y);
                 ctx.lineTo(canvas.width - 20, y);
                 ctx.stroke();
             }
 
-            ctx.font = '55px serif';
+            ctx.font = '50px serif';
             ctx.fillStyle = '#000';
-            ctx.fillText('🎼', 25, 110);
+            ctx.fillText('🎼', 25, startY + 50);
         }
 
-        function drawStaffNotes() {
+        function redrawStaff() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1段目と2段目を描画
+            drawSystem(30);
+            drawSystem(150);
+
             const startX = 100;
             const noteSpacing = 30;
             const lineSpacing = 7.5;
-            const bottomLineY = 105;
+            const maxNotesPerLine = 18;
 
             pianoNotesHistory.forEach((note, index) => {
-                const x = startX + index * noteSpacing;
+                const lineIndex = Math.floor(index / maxNotesPerLine);
+                const colIndex = index % maxNotesPerLine;
+
+                if (lineIndex >= 2) return; // 最大2段まで
+
+                const x = startX + colIndex * noteSpacing;
+                const baseStartY = lineIndex === 0 ? 30 : 150;
+                const bottomLineY = baseStartY + 60;
+
                 const step = Math.floor(note.positionStep);
                 const isSharp = note.noteName.includes('#');
                 const y = bottomLineY - (step - 2) * lineSpacing;
@@ -744,12 +757,7 @@
             });
         }
 
-        function redrawStaff() {
-            drawStaffLines();
-            drawStaffNotes();
-        }
-
-        // --- ギターTAB譜ジェネレーター機能 (ご提示コード) ---
+        // --- ギターTAB譜ジェネレーター機能 ---
         const chordDb = {
             "C": ["0", "1", "0", "2", "3", "x"], "D": ["2", "3", "2", "0", "x", "x"], "E": ["0", "0", "1", "2", "2", "0"],
             "F": ["1", "1", "2", "3", "3", "1"], "G": ["3", "0", "0", "0", "2", "3"], "A": ["0", "2", "2", "2", "0", "x"],
@@ -920,10 +928,15 @@
                 removeMessage(loadingId);
                 appendMessage('通信エラーが発生しました。', 'assistant');
             } finally {
-                mediaFile.value = '';
-                fileNameDisplay.textContent = "選択されていません";
+                mediaFile.value = andResetFile();
             }
         });
+
+        function andResetFile() {
+            mediaFile.value = '';
+            fileNameDisplay.textContent = "選択されていません";
+            return '';
+        }
 
         function appendMessage(text, sender) {
             const messageDiv = document.createElement('div');
